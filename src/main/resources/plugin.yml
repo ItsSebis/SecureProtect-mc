@@ -1,0 +1,17 @@
+name: SecureProtect
+version: '${version}'
+main: dev.sebi.secureprotect.SecureProtectPlugin
+api-version: '26.3'
+description: Lightweight block and container history with a wooden hoe inspector.
+commands:
+  sp:
+    description: SecureProtect commands
+    aliases: [secureprotect]
+    usage: /sp <lookup|page|wand|status|purge|reload>
+permissions:
+  secureprotect.inspect:
+    description: Use the inspector wand and /sp lookup
+    default: op
+  secureprotect.admin:
+    description: Status, purge and reload
+    default: op

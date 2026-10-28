@@ -1,0 +1,40 @@
+# SecureProtect configuration
+
+retention:
+  # Entries older than this many days are purged (checked hourly). 0 = keep forever.
+  days: 30
+  # Maximum history size in MB. When exceeded, the oldest entries are dropped until
+  # usage is back under 90%. 0 = no size cap.
+  max-size-mb: 1024
+
+storage:
+  # How often queued entries are written to disk (restart required).
+  flush-interval-ms: 1000
+  # Hard cap on queued, not yet written entries. Oldest are dropped beyond this (restart required).
+  queue-limit: 100000
+
+inspect:
+  # Item that triggers lookups for players with secureprotect.inspect.
+  # Left-click: history of the clicked block. Right-click: container log, or the block on the clicked face.
+  tool: WOODEN_HOE
+  page-size: 8
+
+# Block interactions that get logged. Material names, or #tag for a block tag.
+# Containers are not listed here: their item changes are logged separately.
+interactions:
+  - "#doors"
+  - "#trapdoors"
+  - "#fence_gates"
+  - "#buttons"
+  - LEVER
+  - REPEATER
+  - COMPARATOR
+  - NOTE_BLOCK
+  - DAYLIGHT_DETECTOR
+  - JUKEBOX
+  - LECTERN
+  - CAKE
+  - RESPAWN_ANCHOR
+
+# Worlds that are never logged.
+ignored-worlds: []
