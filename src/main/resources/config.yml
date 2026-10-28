@@ -12,12 +12,22 @@ storage:
   flush-interval-ms: 1000
   # Hard cap on queued, not yet written entries. Oldest are dropped beyond this (restart required).
   queue-limit: 100000
+  # Enchantments, names and other item data are stored for container items. Items whose data is
+  # larger than this many bytes (e.g. a full shulker box) are stored as their plain material.
+  max-item-data-bytes: 16384
 
 inspect:
   # Item that triggers lookups for players with secureprotect.inspect.
   # Left-click: history of the clicked block. Right-click: container log, or the block on the clicked face.
   tool: WOODEN_HOE
   page-size: 8
+  # Sneak + right-click in the air with the wand finds the nearest spot with history along your
+  # line of sight (up to air-range blocks), e.g. where a block used to be.
+  air-range: 6
+  # How long the inspected block is outlined with particles (only you see them). 0 = off.
+  highlight-seconds: 3
+  # Largest radius for /sp near.
+  near-max-radius: 16
 
 # Block interactions that get logged. Material names, or #tag for a block tag.
 # Containers are not listed here: their item changes are logged separately.

@@ -7,7 +7,7 @@ commands:
   sp:
     description: SecureProtect commands
     aliases: [secureprotect]
-    usage: /sp <lookup|page|wand|status|purge|reload>
+    usage: /sp <lookup|near|at|page|wand|status|purge|reload>
 permissions:
   secureprotect.inspect:
     description: Use the inspector wand and /sp lookup

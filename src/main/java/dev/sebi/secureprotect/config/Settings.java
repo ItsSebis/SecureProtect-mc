@@ -13,7 +13,8 @@ import java.util.logging.Logger;
 
 /** Immutable snapshot of config.yml; the plugin swaps in a new one on /sp reload. */
 public record Settings(int retentionDays, long maxSizeBytes, long flushIntervalMs, int queueLimit,
-                       Material wand, int pageSize, Set<Material> interactions, Set<String> ignoredWorlds) {
+                       Material wand, int pageSize, int highlightSeconds, int airRange, int nearMaxRadius,
+                       int maxItemDataBytes, Set<Material> interactions, Set<String> ignoredWorlds) {
 
     public static Settings load(FileConfiguration cfg, Logger log) {
         Material wand = Material.matchMaterial(cfg.getString("inspect.tool", "WOODEN_HOE"));
@@ -28,6 +29,10 @@ public record Settings(int retentionDays, long maxSizeBytes, long flushIntervalM
                 Math.max(1000, cfg.getInt("storage.queue-limit", 100_000)),
                 wand,
                 Math.max(1, cfg.getInt("inspect.page-size", 8)),
+                Math.max(0, cfg.getInt("inspect.highlight-seconds", 3)),
+                Math.min(32, Math.max(1, cfg.getInt("inspect.air-range", 6))),
+                Math.min(64, Math.max(1, cfg.getInt("inspect.near-max-radius", 16))),
+                Math.max(0, cfg.getInt("storage.max-item-data-bytes", 16384)),
                 resolveInteractions(cfg.getStringList("interactions"), log),
                 new HashSet<>(cfg.getStringList("ignored-worlds")));
     }

@@ -38,6 +38,7 @@ public final class Storage implements AutoCloseable {
     private final AtomicLong dropped = new AtomicLong();
     private final Coalescer coalescer = new Coalescer();
     private final AtomicBoolean retentionRunning = new AtomicBoolean();
+    private long lastItemCleanup; // writer thread only
 
     private final ScheduledExecutorService writer = Executors.newSingleThreadScheduledExecutor(r -> daemon(r, "SecureProtect-writer"));
     private final ScheduledExecutorService reader = Executors.newSingleThreadScheduledExecutor(r -> daemon(r, "SecureProtect-reader"));
@@ -108,15 +109,33 @@ public final class Storage implements AutoCloseable {
 
     // ---- lookups ----
 
-    /** Flushes pending entries first so a lookup sees what just happened. */
-    public CompletableFuture<HistoryPage> query(String world, int x, int y, int z, Set<Action> actions, int limit, int offset) {
+    @FunctionalInterface
+    private interface SqlQuery<T> {
+        T run() throws SQLException;
+    }
+
+    /** Flushes pending entries first so a lookup sees what just happened, then runs on the reader thread. */
+    private <T> CompletableFuture<T> read(SqlQuery<T> query) {
         return CompletableFuture.runAsync(this::flush, writer).thenApplyAsync(ignored -> {
             try {
-                return db.query(world, x, y, z, actions, limit, offset);
+                return query.run();
             } catch (SQLException ex) {
                 throw new IllegalStateException(ex);
             }
         }, reader);
+    }
+
+    public CompletableFuture<HistoryPage> query(String world, int x, int y, int z, Set<Action> actions, int limit, int offset) {
+        return read(() -> db.query(world, x, y, z, actions, limit, offset));
+    }
+
+    /** Resolves to the index of the first position with history, or -1. */
+    public CompletableFuture<Integer> firstWithHistory(String world, List<int[]> positions) {
+        return read(() -> db.firstWithHistory(world, positions));
+    }
+
+    public CompletableFuture<NearPage> near(String world, int cx, int cy, int cz, int radius, int limit, int offset) {
+        return read(() -> db.near(world, cx, cy, cz, radius, limit, offset));
     }
 
     public record Stats(long rows, long fileBytes, int queued, long dropped) {
@@ -150,10 +169,22 @@ public final class Storage implements AutoCloseable {
                 writer.schedule(() -> purgeStep(cutoff, total + n, done), CHUNK_PAUSE_MS, TimeUnit.MILLISECONDS);
             } else {
                 done.complete(total + n);
+                if (total + n > 0) {
+                    cleanupItems();
+                }
                 shrinkStep();
             }
         } catch (Throwable t) {
             done.completeExceptionally(t);
+        }
+    }
+
+    /** Orphaned item data (enchanted books nobody logged any more) is cleaned at most every 6 hours. */
+    private void cleanupItems() throws SQLException {
+        long now = System.currentTimeMillis();
+        if (now - lastItemCleanup >= 6 * 3_600_000L) {
+            lastItemCleanup = now;
+            db.deleteUnusedItems();
         }
     }
 

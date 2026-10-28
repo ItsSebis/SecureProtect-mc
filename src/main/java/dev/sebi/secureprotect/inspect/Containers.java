@@ -1,7 +1,6 @@
 package dev.sebi.secureprotect.inspect;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.Chest;
 import org.bukkit.block.Container;
@@ -9,7 +8,7 @@ import org.bukkit.inventory.DoubleChestInventory;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 
-import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.Map;
 
 /** Helpers that give every container one canonical coordinate (a double chest is always its left half). */
@@ -38,11 +37,12 @@ public final class Containers {
         return block.getState(false) instanceof Container ? block : null;
     }
 
-    public static Map<Material, Integer> count(Inventory inv) {
-        Map<Material, Integer> counts = new EnumMap<>(Material.class);
+    /** Item counts keyed by a single-item copy, so differently enchanted/named stacks stay separate. */
+    public static Map<ItemStack, Integer> count(Inventory inv) {
+        Map<ItemStack, Integer> counts = new HashMap<>();
         for (ItemStack stack : inv.getContents()) {
             if (stack != null && !stack.getType().isAir()) {
-                counts.merge(stack.getType(), stack.getAmount(), Integer::sum);
+                counts.merge(stack.asOne(), stack.getAmount(), Integer::sum);
             }
         }
         return counts;

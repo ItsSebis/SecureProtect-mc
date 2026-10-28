@@ -25,7 +25,7 @@ public final class SecureProtectPlugin extends JavaPlugin {
 
         try {
             getDataFolder().mkdirs();
-            Database db = new Database(getDataFolder().toPath().resolve("history.db"));
+            Database db = new Database(getDataFolder().toPath().resolve("history.db"), settings.maxItemDataBytes());
             storage = new Storage(db, getLogger(), settings.queueLimit(),
                     () -> settings.retentionDays(), () -> settings.maxSizeBytes());
         } catch (SQLException ex) {

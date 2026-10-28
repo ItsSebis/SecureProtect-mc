@@ -17,7 +17,7 @@ import java.util.Locale;
 import static net.kyori.adventure.text.Component.text;
 
 public final class SpCommand implements TabExecutor {
-    private static final List<String> SUBCOMMANDS = List.of("lookup", "page", "wand", "status", "purge", "reload");
+    private static final List<String> SUBCOMMANDS = List.of("lookup", "near", "at", "page", "wand", "status", "purge", "reload");
 
     private final SecureProtectPlugin plugin;
 
@@ -29,7 +29,7 @@ public final class SpCommand implements TabExecutor {
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         String sub = args.length == 0 ? "" : args[0].toLowerCase(Locale.ROOT);
         switch (sub) {
-            case "lookup", "page", "wand" -> {
+            case "lookup", "near", "at", "page", "wand" -> {
                 if (!(sender instanceof Player player)) {
                     sender.sendMessage(text("Players only.", NamedTextColor.RED));
                 } else if (!sender.hasPermission("secureprotect.inspect")) {
@@ -45,7 +45,7 @@ public final class SpCommand implements TabExecutor {
                     adminCommand(sender, sub, args);
                 }
             }
-            default -> sender.sendMessage(text("/sp <lookup|page <n>|wand|status|purge <days>|reload>", NamedTextColor.GRAY));
+            default -> sender.sendMessage(text("/sp <lookup|near [radius]|at <x> <y> <z>|page <n>|wand|status|purge <days>|reload>", NamedTextColor.GRAY));
         }
         return true;
     }
@@ -54,7 +54,8 @@ public final class SpCommand implements TabExecutor {
         switch (sub) {
             case "wand" -> {
                 player.getInventory().addItem(new ItemStack(plugin.settings().wand()));
-                player.sendMessage(text("Left-click a block: its history. Right-click: container log, or the block on the clicked face.", NamedTextColor.GOLD));
+                player.sendMessage(text("Left-click a block: its history. Right-click: container log, or the block on the clicked face."
+                        + " Sneak + right-click in the air: the nearest changed spot you are looking at.", NamedTextColor.GOLD));
             }
             case "lookup" -> {
                 Block target = player.getTargetBlockExact(5);
@@ -63,6 +64,25 @@ public final class SpCommand implements TabExecutor {
                     return;
                 }
                 plugin.inspector().inspect(player, target, Action.ALL);
+            }
+            case "near" -> {
+                int max = plugin.settings().nearMaxRadius();
+                Integer radius = args.length > 1 ? parse(args[1]) : Integer.valueOf(Math.min(5, max));
+                if (radius == null || radius < 1 || radius > max) {
+                    player.sendMessage(text("/sp near [radius 1-" + max + "]", NamedTextColor.RED));
+                    return;
+                }
+                plugin.inspector().near(player, radius);
+            }
+            case "at" -> {
+                Integer x = args.length > 3 ? parse(args[1]) : null;
+                Integer y = args.length > 3 ? parse(args[2]) : null;
+                Integer z = args.length > 3 ? parse(args[3]) : null;
+                if (x == null || y == null || z == null) {
+                    player.sendMessage(text("/sp at <x> <y> <z>", NamedTextColor.RED));
+                    return;
+                }
+                plugin.inspector().inspect(player, player.getWorld().getBlockAt(x, y, z), Action.ALL);
             }
             default -> {
                 Integer page = args.length > 1 ? parse(args[1]) : null;

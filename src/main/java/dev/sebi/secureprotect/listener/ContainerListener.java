@@ -2,7 +2,6 @@ package dev.sebi.secureprotect.listener;
 
 import dev.sebi.secureprotect.inspect.Containers;
 import dev.sebi.secureprotect.storage.Action;
-import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -12,8 +11,8 @@ import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
 
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -30,9 +29,9 @@ public final class ContainerListener implements Listener {
         final Block block;
         final Inventory inventory;
         final Key key;
-        final Map<Material, Integer> before;
+        final Map<ItemStack, Integer> before;
 
-        Session(Block block, Inventory inventory, Map<Material, Integer> before) {
+        Session(Block block, Inventory inventory, Map<ItemStack, Integer> before) {
             this.block = block;
             this.inventory = inventory;
             this.before = before;
@@ -76,26 +75,26 @@ public final class ContainerListener implements Listener {
         if (s == null) {
             return;
         }
-        Map<Material, Integer> after = Containers.count(s.inventory);
-        Map<Material, Integer> delta = new EnumMap<>(Material.class);
-        for (Map.Entry<Material, Integer> en : after.entrySet()) {
+        Map<ItemStack, Integer> after = Containers.count(s.inventory);
+        Map<ItemStack, Integer> delta = new HashMap<>();
+        for (Map.Entry<ItemStack, Integer> en : after.entrySet()) {
             delta.merge(en.getKey(), en.getValue() - s.before.getOrDefault(en.getKey(), 0), Integer::sum);
         }
-        for (Map.Entry<Material, Integer> en : s.before.entrySet()) {
+        for (Map.Entry<ItemStack, Integer> en : s.before.entrySet()) {
             if (!after.containsKey(en.getKey())) {
                 delta.merge(en.getKey(), -en.getValue(), Integer::sum);
             }
         }
-        for (Map.Entry<Material, Integer> en : delta.entrySet()) {
+        for (Map.Entry<ItemStack, Integer> en : delta.entrySet()) {
             int d = en.getValue();
             if (d != 0) {
-                recorder.record(player, s.block, d < 0 ? Action.TAKE : Action.PUT, en.getKey().name(), Math.abs(d));
+                recorder.recordItem(player, s.block, d < 0 ? Action.TAKE : Action.PUT, en.getKey(), Math.abs(d));
             }
         }
         // Other players still looking at the same container must not be blamed for this player's changes.
         for (Session other : sessions.values()) {
             if (other.key.equals(s.key)) {
-                for (Map.Entry<Material, Integer> en : delta.entrySet()) {
+                for (Map.Entry<ItemStack, Integer> en : delta.entrySet()) {
                     other.before.merge(en.getKey(), en.getValue(), Integer::sum);
                 }
             }
