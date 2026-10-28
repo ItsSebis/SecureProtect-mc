@@ -146,7 +146,8 @@ public final class InspectService {
         }
         player.sendMessage(text("--- History at " + where + " (" + result.total() + " entries) ---", NamedTextColor.GOLD));
         long now = System.currentTimeMillis() / 1000;
-        for (HistoryRow row : result.rows()) {
+        // Pages are fetched newest first, but each page reads top to bottom, oldest to newest.
+        for (HistoryRow row : result.rows().reversed()) {
             player.sendMessage(line(row, now));
         }
         player.sendMessage(nav(page, pages));
@@ -178,7 +179,7 @@ public final class InspectService {
         }
         player.sendMessage(text("--- " + result.total() + " changed spots within " + radius + " blocks ---", NamedTextColor.GOLD));
         long now = System.currentTimeMillis() / 1000;
-        for (NearPage.Entry e : result.entries()) {
+        for (NearPage.Entry e : result.entries().reversed()) {
             Component pos = text("[" + e.x() + " " + e.y() + " " + e.z() + "]", NamedTextColor.AQUA)
                     .hoverEvent(HoverEvent.showText(text("Click to see the full history")))
                     .clickEvent(ClickEvent.runCommand("/sp at " + e.x() + " " + e.y() + " " + e.z()));

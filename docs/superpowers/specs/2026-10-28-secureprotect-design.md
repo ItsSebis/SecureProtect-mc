@@ -23,7 +23,7 @@ The repo is empty (no commits), so this is greenfield.
    - **Right-click** a block: if it is a container, its item log (took/put in, with counts). Otherwise the history of the block on the clicked face (the spot where something would be placed), like CoreProtect.
    - The click event is cancelled while the hoe is used as the wand, so the hoe never tills, breaks or opens anything. Players without the permission use the hoe normally.
    - `/sp lookup` is a no-click fallback: history of the block you are looking at via a 5-block ray trace.
-   - Results are paginated, newest first, with relative plus absolute time, e.g. `3h ago Sebi took 64 Diamond`.
+   - Results are paginated (page 1 holds the newest entries, and each page reads oldest to newest from top to bottom), with relative plus absolute time, e.g. `3h ago Sebi took 64 Diamond`.
    - The wand item is configurable (`inspect.tool`, default `WOODEN_HOE`). Optionally require a custom name/model data so ordinary hoes keep working (my call: default off, since the user asked for a plain wooden hoe).
 4. Near-zero main-thread cost.
 5. Bounded storage via configurable retention.
